@@ -314,6 +314,23 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+.fallback-lecture-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-top: 4px;
+  z-index: 2;
+  padding: 0 15px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thumbnail-fallback {
+  gap: 2px; /* تقليل الفراغ ليتناسق النصين */
+}
+
 .lecture-card:hover {
   transform: translateY(-2px) scale(1.01);
   filter: brightness(1.04);
