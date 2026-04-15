@@ -1,6 +1,6 @@
 let player; 
 let currentVideoUrl = ""; 
-let currentLectureIndex = -1; // متغير جديد لمعرفة ترتيب المحاضرة الحالية
+let currentLectureIndex = -1; 
 
 const state = {
   data: null,
@@ -42,7 +42,6 @@ async function init() {
     state.data = data?.classes ? data : { classes: [] };
     if (!state.data.classes.length) { showError("لا توجد بيانات محاضرات حالياً."); return; }
     
-    // تسجيل الحالة الأولى في تاريخ المتصفح
     history.replaceState({ classIndex: state.activeClassIndex }, "");
 
     renderSidebar();
@@ -149,11 +148,10 @@ function getMimeType(url) {
 }
 
 function openVideoModal(lecture) {
-  // إخفاء شاشة النهاية فوراً عند فتح فيديو جديد (إذا كانت ظاهرة)
-  const endScreen = document.getElementById("endScreen");
+  // إخفاء شاشة النهاية إذا كانت ظاهرة
+  const endScreen = document.getElementById("plyr-end-screen");
   if (endScreen) endScreen.classList.add("hidden");
 
-  // إيجاد ترتيب المحاضرة الحالية لمعرفة المحاضرة التي تليها
   const currentClass = state.data.classes[state.activeClassIndex];
   if (currentClass && currentClass.lectures) {
     currentLectureIndex = currentClass.lectures.findIndex(l => l.url === lecture.url);
@@ -163,7 +161,6 @@ function openVideoModal(lecture) {
   currentVideoUrl = lecture.url; 
   player.source = { type: 'video', title: lecture.title, sources: [{ src: lecture.url, type: getMimeType(lecture.url) }] };
   
-  // إبلاغ المتصفح بفتح المودال (كأنه صفحة جديدة)
   history.pushState({ modalOpen: true, classIndex: state.activeClassIndex }, "");
   
   modalEl.classList.remove("hidden");
@@ -177,7 +174,6 @@ function openVideoModal(lecture) {
   }, 300);
 }
 
-// دالة الإخفاء الفعلية
 function hideModalVisually() {
   if(player) player.stop();
   modalEl.classList.add("hidden");
@@ -185,15 +181,13 @@ function hideModalVisually() {
   document.body.style.overflow = "";
   document.body.style.touchAction = ""; 
   
-  // التأكد من إخفاء شاشة النهاية عند الإغلاق
-  const endScreen = document.getElementById("endScreen");
+  const endScreen = document.getElementById("plyr-end-screen");
   if (endScreen) endScreen.classList.add("hidden");
 }
 
 function closeVideoModal() {
-  // إذا ضغط المستخدم على X والمودال مسجل بالتاريخ، نرجع خطوة للخلف
   if (history.state && history.state.modalOpen) {
-    history.back(); // هذا راح يفعل حدث popstate أدناه
+    history.back(); 
   } else {
     hideModalVisually();
   }
@@ -219,8 +213,6 @@ classListEl.addEventListener("click", (e) => {
   if (idx === state.activeClassIndex) { if (isMobileViewport()) setSidebarCollapsed(true); return; }
   
   state.activeClassIndex = idx;
-  
-  // إبلاغ المتصفح بوجود فصل جديد (لأجل زر الرجوع)
   history.pushState({ classIndex: idx }, "");
   
   renderSidebar();
@@ -244,7 +236,6 @@ layoutEl.addEventListener("click", (e) => { if (isMobileViewport() && !sidebarEl
 modalEl.addEventListener("click", (e) => { if (e.target.dataset.close === "true") closeVideoModal(); });
 closeModalEl.addEventListener("click", closeVideoModal);
 
-// السيطرة على زر الرجوع في الهاتف
 window.addEventListener('popstate', (event) => {
   if (!modalEl.classList.contains('hidden')) {
     hideModalVisually();
@@ -311,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // --- نظام المحاضرة التالية (طريقة يوتيوب) ---
+  // --- النظام السحري لشاشة النهاية (يوتيوب ستايل) ---
   player.on('ended', () => { 
     if (currentVideoUrl) { 
       localStorage.removeItem('vid_progress_' + currentVideoUrl); 
@@ -322,21 +313,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentClass && currentClass.lectures && currentLectureIndex !== -1) {
       const nextLecture = currentClass.lectures[currentLectureIndex + 1];
 
-      // إذا كانت هناك محاضرة تالية، نعرض شاشة النهاية
       if (nextLecture) {
-        const nextTitleEl = document.getElementById("nextLectureTitle");
-        const endScreen = document.getElementById("endScreen");
-        const playNextBtn = document.getElementById("playNextBtn");
-
-        if (nextTitleEl && endScreen && playNextBtn) {
-          nextTitleEl.textContent = nextLecture.title;
-          endScreen.classList.remove("hidden");
-
-          // برمجة زر التشغيل في شاشة النهاية
-          playNextBtn.onclick = () => {
-            openVideoModal(nextLecture);
-          };
+        // إنشاء شاشة النهاية داخل المشغل نفسه حتى تكبر وتصغر وياه
+        let endScreen = document.getElementById('plyr-end-screen');
+        
+        if (!endScreen) {
+          endScreen = document.createElement('div');
+          endScreen.id = 'plyr-end-screen';
+          endScreen.className = 'hidden';
+          endScreen.innerHTML = `
+            <div class="end-screen-content">
+              <p class="next-label">المحاضرة التالية</p>
+              <h4 id="nextLectureTitle"></h4>
+              <button id="playNextBtn" class="play-next-big-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                تشغيل الآن
+              </button>
+            </div>
+          `;
+          
+          // حقن الشاشة داخل حاوية Plyr
+          const plyrContainer = document.querySelector('.plyr');
+          if(plyrContainer) plyrContainer.appendChild(endScreen);
         }
+
+        document.getElementById("nextLectureTitle").textContent = nextLecture.title;
+        
+        document.getElementById("playNextBtn").onclick = () => {
+          openVideoModal(nextLecture);
+        };
+        
+        endScreen.classList.remove("hidden");
       }
     }
   });
