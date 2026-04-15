@@ -750,57 +750,44 @@ body {
   .continue-text { max-width: 220px; font-size: 0.85rem; }
 }
 
-/* --- شاشة النهاية (YouTube Style) --- */
-.video-container { position: relative; } /* ضروري لتمركز شاشة النهاية */
+/* --- إصلاح حجم المودال وزر الإغلاق (مهم للموبايل العرضي) --- */
+.modal__content {
+  max-height: 96vh;      /* يمنع البطاقة من اختراق الشاشة */
+  overflow-y: auto;      /* يسمح بالسكرول الداخلي إذا الشاشة ضيقة */
+}
 
-.end-screen {
+.close-btn {
+  z-index: 9999;         /* نجبر الزر يكون فوق كل شيء حتى ما يختفي */
+}
+
+#modalVideo, .video-container {
+  max-height: 75vh;      /* تحجيم الفيديو حتى ما يبلع الشاشة */
+}
+
+/* --- شاشة النهاية الذكية (تنبني داخل المشغل) --- */
+#plyr-end-screen {
   position: absolute;
   inset: 0;
-  z-index: 10;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(10px);
+  z-index: 100; /* فوق الفيديو وجوه الأزرار */
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  animation: fadeIn 0.5s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
 }
 
-.end-screen-content {
-  padding: 20px;
-  color: white;
+#plyr-end-screen:not(.hidden) {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.next-label {
-  font-size: 0.85rem;
-  color: var(--accent);
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-#nextLectureTitle {
-  font-size: clamp(1.1rem, 4vw, 1.5rem);
-  margin-bottom: 20px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-.play-next-big-btn {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 50px;
-  font-size: 1rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 auto;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(30, 144, 255, 0.4);
-  transition: transform 0.3s ease;
-}
-
+.end-screen-content { padding: 20px; color: white; }
+.next-label { font-size: 0.9rem; color: #1e90ff; font-weight: bold; margin-bottom: 8px; }
+#nextLectureTitle { font-size: clamp(1.1rem, 4vw, 1.5rem); margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.play-next-big-btn { background: #1e90ff; color: white; border: none; padding: 12px 24px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 0 auto; cursor: pointer; box-shadow: 0 4px 15px rgba(30, 144, 255, 0.4); transition: transform 0.3s ease; }
 .play-next-big-btn:hover { transform: scale(1.05); }
 .play-next-big-btn svg { width: 20px; height: 20px; }
