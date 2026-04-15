@@ -16,7 +16,6 @@ const CHAPTER_GRADIENTS = [
   "linear-gradient(135deg, rgba(255, 55, 95, 0.2) 0%, #000 100%)"
 ];
 
-// 2. استدعاء عناصر الواجهة
 const classListEl = document.getElementById("classList");
 const classTitleEl = document.getElementById("classTitle");
 const lecturesGridEl = document.getElementById("lecturesGrid");
@@ -29,7 +28,6 @@ const modalEl = document.getElementById("videoModal");
 const modalTitleEl = document.getElementById("modalTitle");
 const closeModalEl = document.getElementById("closeModal");
 
-// 3. وظائف جلب البيانات والتحميل
 async function init() {
   try {
     showLoading();
@@ -44,7 +42,6 @@ async function init() {
   } catch (e) { console.error(e); showError(); }
 }
 
-// 4. وظائف الرسم (Rendering)
 function renderSidebar() {
   classListEl.innerHTML = "";
   const fragment = document.createDocumentFragment();
@@ -134,7 +131,6 @@ function renderFallbackCover(container, oldElement, chapterName, classIndex, lec
   return fallback;
 }
 
-// 5. إدارة المشغل والمودال (تحديث ذكي)
 function getMimeType(url) {
   if (url.endsWith('.webm')) return 'video/webm';
   if (url.endsWith('.ogg')) return 'video/ogg';
@@ -144,25 +140,35 @@ function getMimeType(url) {
 
 function openVideoModal(lecture) {
   modalTitleEl.textContent = lecture.title || "مشاهدة المحاضرة";
+  
   player.source = {
     type: 'video',
     title: lecture.title,
     sources: [{ src: lecture.url, type: getMimeType(lecture.url) }]
   };
+  
   modalEl.classList.remove("hidden");
+  
+  // قفل شامل للسكرول
+  document.documentElement.style.overflow = "hidden";
   document.body.style.overflow = "hidden";
   document.body.style.touchAction = "none"; 
-  player.play();
+  
+  // تأخير التشغيل بجزء من الثانية لضمان بقاء الأزرار واضحة
+  setTimeout(() => {
+    player.play();
+  }, 300);
 }
 
 function closeVideoModal() {
   player.stop();
   modalEl.classList.add("hidden");
+  
+  document.documentElement.style.overflow = "";
   document.body.style.overflow = "";
   document.body.style.touchAction = ""; 
 }
 
-// 6. وظائف مساعدة (Helpers)
 function showLoading() { loadingEl.classList.remove("hidden"); errorEl.classList.add("hidden"); lecturesGridEl.classList.add("hidden"); }
 function hideLoading() { loadingEl.classList.add("hidden"); }
 function showError(message) { loadingEl.classList.add("hidden"); lecturesGridEl.classList.add("hidden"); errorEl.classList.remove("hidden"); if (message) errorEl.textContent = message; }
@@ -171,10 +177,12 @@ function isMobileViewport() { return window.matchMedia("(max-width: 900px)").mat
 function setSidebarCollapsed(collapsed) {
   sidebarEl.classList.toggle("is-collapsed", collapsed);
   layoutEl.classList.toggle("sidebar-collapsed", collapsed);
-  if (window.innerWidth <= 900) document.body.style.overflow = collapsed ? "" : "hidden";
+  if (window.innerWidth <= 900) {
+      document.documentElement.style.overflow = collapsed ? "" : "hidden";
+      document.body.style.overflow = collapsed ? "" : "hidden";
+  }
 }
 
-// 7. الأحداث (Event Listeners)
 sidebarToggleEl.addEventListener("click", () => setSidebarCollapsed(!sidebarEl.classList.contains("is-collapsed")));
 
 classListEl.addEventListener("click", (e) => {
@@ -200,14 +208,12 @@ modalEl.addEventListener("click", (e) => { if (e.target.dataset.close === "true"
 closeModalEl.addEventListener("click", closeVideoModal);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeVideoModal(); });
 
-// 8. التشغيل النهائي (Initialization)
 const mobileMediaQuery = window.matchMedia("(max-width: 900px)");
 setSidebarCollapsed(isMobileViewport());
 mobileMediaQuery.addEventListener("change", () => setSidebarCollapsed(isMobileViewport()));
 
 init();
 
-// 9. تهيئة Plyr واختصارات يوتيوب
 document.addEventListener('DOMContentLoaded', () => {
   player = new Plyr('#player', {
     controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
