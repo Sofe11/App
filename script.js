@@ -4,6 +4,18 @@ const state = {
   pendingRenderTimer: null,
 };
 
+// مصفوفة تدرجات لونية هادئة وراقية جداً (Apple & Glassmorphism Style)
+const CHAPTER_GRADIENTS = [
+  "linear-gradient(135deg, rgba(10, 132, 255, 0.25) 0%, #000 100%)",   // أزرق ملكي خافت
+  "linear-gradient(135deg, rgba(94, 92, 230, 0.25) 0%, #000 100%)",    // نيلي هادئ
+  "linear-gradient(135deg, rgba(100, 210, 255, 0.2) 0%, #000 100%)",   // سماوي جليدي
+  "linear-gradient(135deg, rgba(48, 209, 88, 0.2) 0%, #000 100%)",     // أخضر زمردي ناعم
+  "linear-gradient(135deg, rgba(255, 159, 10, 0.2) 0%, #000 100%)",    // برتقالي دافئ (خريف)
+  "linear-gradient(135deg, rgba(191, 94, 230, 0.2) 0%, #000 100%)",    // بنفسجي لافندر
+  "linear-gradient(135deg, rgba(142, 142, 147, 0.3) 0%, #000 100%)",   // رمادي صخري راقٍ
+  "linear-gradient(135deg, rgba(255, 55, 95, 0.2) 0%, #000 100%)"      // وردي ترابي
+];
+
 const classListEl = document.getElementById("classList");
 const classTitleEl = document.getElementById("classTitle");
 const lecturesGridEl = document.getElementById("lecturesGrid");
@@ -88,7 +100,6 @@ function renderLectures(animated = false) {
 function populateLectureCards(selectedClass) {
   const lectures = selectedClass.lectures || [];
   lecturesGridEl.innerHTML = "";
-
   const fragment = document.createDocumentFragment();
 
   lectures.forEach((lecture, index) => {
@@ -99,7 +110,6 @@ function populateLectureCards(selectedClass) {
     const thumbWrap = document.createElement("div");
     thumbWrap.className = "thumbnail-wrap";
 
-    // تطبيق فكرة صورة الغلاف (Cover Image) الثابتة لكل فصل
     let mediaElement;
     if (selectedClass.coverImage || lecture.coverImage) {
       mediaElement = document.createElement("img");
@@ -107,12 +117,9 @@ function populateLectureCards(selectedClass) {
       mediaElement.alt = lecture.title || `محاضرة ${index + 1}`;
       mediaElement.loading = "lazy";
       mediaElement.src = lecture.coverImage || selectedClass.coverImage;
-      
-      // في حال فشل تحميل الصورة، نعرض الغلاف البديل
-      mediaElement.onerror = () => renderFallbackCover(thumbWrap, mediaElement, selectedClass.name);
+      mediaElement.onerror = () => renderFallbackCover(thumbWrap, mediaElement, selectedClass.name, state.activeClassIndex);
     } else {
-      // إذا لم يتم تحديد صورة في data.json، يتم رسم الغلاف الموحد الذكي مباشرة
-      mediaElement = renderFallbackCover(null, null, selectedClass.name);
+      mediaElement = renderFallbackCover(null, null, selectedClass.name, state.activeClassIndex);
     }
 
     const thumbnailOverlay = document.createElement("div");
@@ -147,19 +154,19 @@ function populateLectureCards(selectedClass) {
   lecturesGridEl.classList.remove("hidden");
 }
 
-// دالة لرسم الغلاف الذكي الموحد (يحتوي على اسم الفصل)
-function renderFallbackCover(container, oldElement, chapterName) {
+function renderFallbackCover(container, oldElement, chapterName, classIndex) {
   const fallback = document.createElement("div");
   fallback.className = "thumbnail-fallback thumbnail-media";
+  
+  // تطبيق التدرج اللوني الهادئ بناءً على رقم الفصل
+  const gradient = CHAPTER_GRADIENTS[classIndex % CHAPTER_GRADIENTS.length];
+  fallback.style.background = gradient;
 
   const chapterLabel = document.createElement("div");
   chapterLabel.className = "fallback-chapter-name";
   chapterLabel.textContent = chapterName;
-
-  const playIcon = document.createElement("div");
-  playIcon.className = "fallback-play";
   
-  fallback.append(chapterLabel, playIcon);
+  fallback.append(chapterLabel);
 
   if (container && oldElement && oldElement.parentNode === container) {
     container.replaceChild(fallback, oldElement);
@@ -248,10 +255,8 @@ lecturesGridEl.addEventListener("click", (event) => {
   openVideoModal(lecture);
 });
 
-// إغلاق القائمة عند النقر على المحاضرات (للموبايل فقط)
 layoutEl.addEventListener("click", (event) => {
   if (isMobileViewport() && !sidebarEl.classList.contains("is-collapsed")) {
-    // التأكد أن النقر لم يكن على الشريط الجانبي نفسه
     if (!event.target.closest('.sidebar')) {
       setSidebarCollapsed(true);
     }
