@@ -1,3 +1,4 @@
+let player;
 const state = {
   data: null,
   activeClassIndex: 0,
@@ -178,15 +179,21 @@ function renderFallbackCover(container, oldElement, chapterName, classIndex, lec
 
 function openVideoModal(lecture) {
   modalTitleEl.textContent = lecture.title || "مشاهدة المحاضرة";
-  modalVideoEl.src = lecture.url;
+  
+  // تغيير مصدر الفيديو للمشغل الجديد (Plyr)
+  player.source = {
+    type: 'video',
+    title: lecture.title,
+    sources: [{ src: lecture.url, type: 'video/mp4' }]
+  };
+
   modalEl.classList.remove("hidden");
   document.body.style.overflow = "hidden";
+  player.play(); // تشغيل تلقائي فور الفتح
 }
 
 function closeVideoModal() {
-  modalVideoEl.pause();
-  modalVideoEl.removeAttribute("src");
-  modalVideoEl.load();
+  player.stop(); // إيقاف الفيديو تماماً عند الإغلاق
   modalEl.classList.add("hidden");
   document.body.style.overflow = "";
 }
@@ -298,3 +305,31 @@ syncSidebarForViewport();
 mobileMediaQuery.addEventListener("change", syncSidebarForViewport);
 
 init();
+
+// تشغيل المشغل وبرمجة اختصارات يوتيوب
+document.addEventListener('DOMContentLoaded', () => {
+  // تهيئة المشغل
+  player = new Plyr('#player', {
+    controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+    settings: ['quality', 'speed'],
+    speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+  });
+
+  // برمجة النقر المزدوج للتقديم والتأخير 10 ثواني
+  const videoWrapper = document.querySelector('.plyr');
+  if (videoWrapper) {
+    videoWrapper.addEventListener('dblclick', (e) => {
+      e.stopImmediatePropagation(); // منع التكبير/التصغير الافتراضي
+      e.preventDefault();
+      
+      const rect = videoWrapper.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      
+      if (x > rect.width / 2) {
+        player.forward(10); // تقديم 10 ثواني جهة اليمين
+      } else {
+        player.rewind(10);  // تأخير 10 ثواني جهة اليسار
+      }
+    }, true);
+  }
+});
