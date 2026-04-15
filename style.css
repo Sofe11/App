@@ -600,3 +600,28 @@ body {
   .fallback-lecture-title { font-size: 0.65rem; }
   .duration-badge { font-size: 0.65rem; padding: 2px 6px; left: 6px; bottom: 6px; }
 }
+
+/* --- إعدادات مشغل الفيديو الجديد (Plyr) --- */
+
+:root { 
+  --plyr-color-main: #ff0000; /* أحمر يوتيوب المميز */
+}
+
+/* حاوية الفيديو لإعطائه لمسة آبل الاحترافية */
+.video-container {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* تدوير زوايا المشغل نفسه */
+.plyr--video { 
+  border-radius: 12px; 
+}
+
+/* منع المتصفح من عمل زووم تلقائي عند النقر المزدوج (مهم للموبايل) */
+.plyr { 
+  touch-action: manipulation; 
+}
