@@ -23,8 +23,26 @@
   --text-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
+/* --- (منع التحديد والنسخ وتحميل الصور) تم دمجها هنا --- */
 * {
   box-sizing: border-box;
+  -webkit-touch-callout: none; 
+  -webkit-user-select: none;   
+  -moz-user-select: none;      
+  -ms-user-select: none;       
+  user-select: none;           
+}
+
+/* السماح بالضغط والتحديد للأزرار والروابط فقط */
+button, .watch-btn, .class-btn, a {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* حماية الصور من السحب واللمس المطول */
+img {
+  -webkit-user-drag: none; 
+  pointer-events: none;    
 }
 
 html,
@@ -448,22 +466,20 @@ body {
   box-shadow: 0 0 20px rgba(30, 144, 255, 0.28);
 }
 
-/* --- تحديث المودال للتمركز وقفل السكرول بقوة --- */
+/* --- المودال والتوسيط (تم التنظيف والتصحيح) --- */
 .modal {
   position: fixed;
   inset: 0;
   z-index: 999;
-  display: flex; /* شلنا الـ !important من هنا */
+  display: flex; 
   align-items: center;
   justify-content: center;
   padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom);
 }
 
-/* هذا السطر الإضافي يضمن اختفاء المودال غصباً عنه لما نضغط إغلاق */
 .modal.hidden {
   display: none !important;
 }
-
 
 .modal__overlay {
   position: absolute;
@@ -524,6 +540,140 @@ body {
   box-shadow: 0 0 18px rgba(30, 144, 255, 0.24);
 }
 
+/* --- إعدادات مشغل الفيديو الجديد (Plyr) --- */
+:root { 
+  --plyr-color-main: #ff0000;
+}
+
+.video-container {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.plyr--video { 
+  border-radius: 12px; 
+}
+
+.plyr { 
+  touch-action: manipulation; 
+}
+
+.plyr .plyr__controls {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.4s ease, visibility 0.4s ease !important;
+}
+
+.plyr--hide-controls .plyr__controls {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition-delay: 4s !important; 
+}
+
+/* --- ملاحظة تكبير الشاشة --- */
+.fullscreen-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.55); 
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.fullscreen-hint svg {
+  width: 14px;
+  height: 14px;
+  color: inherit; 
+}
+
+/* --- إشعار مواصلة المشاهدة (Floating Banner) --- */
+.continue-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: linear-gradient(135deg, rgba(16, 17, 20, 0.95), rgba(30, 144, 255, 0.15));
+  border: 1px solid rgba(30, 144, 255, 0.3);
+  border-radius: 16px;
+  padding: 12px 16px 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  z-index: 90; 
+  backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(30, 144, 255, 0.2);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+  width: max-content;
+  max-width: 90vw;
+  cursor: pointer;
+}
+
+.continue-banner.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.continue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.continue-label {
+  font-size: 0.75rem;
+  color: #1e90ff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.continue-text {
+  font-size: 0.85rem;
+  color: #fff;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 250px;
+  line-height: 1.4;
+}
+
+.continue-play {
+  background: #1e90ff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(30,144,255,0.4);
+}
+.continue-play svg { width: 18px; height: 18px; margin-left: 2px; }
+
+.close-banner {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-right: -4px;
+}
+
+/* =========================================
+   Media Queries (الاستجابة للموبايل والتابلت)
+   تم نقلها للنهاية للحفاظ على التصميم
+   ========================================= */
 @media (max-width: 900px) {
   .layout {
     padding-right: 0 !important;
@@ -595,161 +745,7 @@ body {
   .fallback-chapter-name { font-size: 0.75rem; }
   .fallback-lecture-title { font-size: 0.65rem; }
   .duration-badge { font-size: 0.65rem; padding: 2px 6px; left: 6px; bottom: 6px; }
-}
-
-/* --- إعدادات مشغل الفيديو الجديد (Plyr) --- */
-:root { 
-  --plyr-color-main: #ff0000;
-}
-
-.video-container {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.plyr--video { 
-  border-radius: 12px; 
-}
-
-.plyr { 
-  touch-action: manipulation; 
-}
-
-/* --- إجبار الأزرار على البقاء لفترة كافية --- */
-.plyr .plyr__controls {
-  opacity: 1 !important;
-  visibility: visible !important;
-  transition: opacity 0.4s ease, visibility 0.4s ease !important;
-}
-
-.plyr--hide-controls .plyr__controls {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  transition-delay: 4s !important; 
-}
-
-/* --- ملاحظة تكبير الشاشة (بدون إطارات) --- */
-.fullscreen-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
-  color: rgba(255, 255, 255, 0.55); /* لون رمادي هادئ جداً */
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.fullscreen-hint svg {
-  width: 14px;
-  height: 14px;
-  color: inherit; /* يأخذ نفس لون النص */
-}
-
-/* --- (منع التحديد والنسخ وتحميل الصور) --- */
-* {
-  -webkit-touch-callout: none; /* منع ظهور القائمة عند اللمس المطول بالموبايل */
-  -webkit-user-select: none;   /* منع تحديد النص (سفاري وكروم) */
-  -moz-user-select: none;      /* منع تحديد النص (فايرفوكس) */
-  -ms-user-select: none;       /* منع التحديد (إيدج) */
-  user-select: none;           /* الخاصية القياسية لمنع النسخ */
-}
-
-/* السماح بالضغط على الأزرار فقط */
-button, .watch-btn, .class-btn {
-  -webkit-user-select: auto;
-  user-select: auto;
-}
-
-/*  الصور من السحب واللمس المطول */
-img {
-  -webkit-user-drag: none; /* منع سحب الصورة بالماوس */
-  pointer-events: none;    /* إلغاء تفاعل الصورة مع اللمس تماماً */
-}
-
-/* --- إشعار مواصلة المشاهدة (Floating Banner) --- */
-.continue-banner {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: linear-gradient(135deg, rgba(16, 17, 20, 0.95), rgba(30, 144, 255, 0.15));
-  border: 1px solid rgba(30, 144, 255, 0.3);
-  border-radius: 16px;
-  padding: 12px 16px 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  z-index: 90; /* تحت المودال بشوية */
-  backdrop-filter: blur(20px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(30, 144, 255, 0.2);
-  opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
-  width: max-content;
-  max-width: 90vw;
-  cursor: pointer;
-}
-
-.continue-banner.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-
-.continue-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.continue-label {
-  font-size: 0.75rem;
-  color: #1e90ff;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.continue-text {
-  font-size: 0.85rem;
-  color: #fff;
-  font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  max-width: 250px;
-  line-height: 1.4;
-}
-
-.continue-play {
-  background: #1e90ff;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(30,144,255,0.4);
-}
-.continue-play svg { width: 18px; height: 18px; margin-left: 2px; }
-
-.close-banner {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.5);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0 4px;
-  margin-right: -4px;
-}
-
-@media (max-width: 600px) {
+  
   .continue-banner { bottom: 15px; padding: 10px 12px 10px 16px; width: 90vw; }
   .continue-text { max-width: 220px; font-size: 0.85rem; }
 }
