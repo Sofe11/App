@@ -29,9 +29,9 @@ const thumbnailObserver = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
-      const img = entry.target;
-      thumbnailObserver.unobserve(img);
-      enqueueThumbnailJob(img);
+      const mediaEl = entry.target;
+      thumbnailObserver.unobserve(mediaEl);
+      enqueueThumbnailJob(mediaEl);
     });
   },
   { rootMargin: THUMBNAIL_ROOT_MARGIN }
@@ -116,14 +116,23 @@ function populateLectureCards(lectures) {
     card.className = "lecture-card";
     card.style.animationDelay = `${Math.min(index * 35, 350)}ms`;
 
+    const thumbWrap = document.createElement("div");
+    thumbWrap.className = "thumbnail-wrap";
+
     const thumbnail = document.createElement("img");
-    thumbnail.className = "thumbnail";
+    thumbnail.className = "thumbnail thumbnail-media";
     thumbnail.alt = lecture.title || `محاضرة ${index + 1}`;
     thumbnail.loading = "lazy";
     thumbnail.decoding = "async";
     thumbnail.fetchPriority = "low";
     thumbnail.dataset.videoUrl = lecture.url || "";
     thumbnail.dataset.renderToken = String(state.renderToken);
+
+    const durationBadge = document.createElement("span");
+    durationBadge.className = "duration-badge";
+    durationBadge.textContent = `▶ ${lecture.duration || "--:--"}`;
+
+    thumbWrap.append(thumbnail, durationBadge);
 
     const body = document.createElement("div");
     body.className = "lecture-body";
@@ -132,22 +141,14 @@ function populateLectureCards(lectures) {
     title.className = "lecture-title";
     title.textContent = lecture.title || `محاضرة ${index + 1}`;
 
-    const desc = document.createElement("p");
-    desc.className = "lecture-desc";
-    desc.textContent = lecture.description || "شرح مفصل لمحتوى المحاضرة.";
-
-    const meta = document.createElement("div");
-    meta.className = "lecture-meta";
-    meta.textContent = `المدة: ${generateFakeDuration(index)}`;
-
     const watchBtn = document.createElement("button");
     watchBtn.className = "watch-btn";
     watchBtn.type = "button";
     watchBtn.textContent = "مشاهدة";
     watchBtn.dataset.lectureIndex = String(index);
 
-    body.append(title, desc, meta, watchBtn);
-    card.append(thumbnail, body);
+    body.append(title, watchBtn);
+    card.append(thumbWrap, body);
     fragment.appendChild(card);
 
     thumbnailObserver.observe(thumbnail);
@@ -163,11 +164,11 @@ function resetThumbnailWork() {
   thumbnailQueue.length = 0;
 }
 
-function enqueueThumbnailJob(imgEl) {
+function enqueueThumbnailJob(mediaEl) {
   const job = {
-    imgEl,
-    videoUrl: imgEl.dataset.videoUrl || "",
-    renderToken: Number(imgEl.dataset.renderToken || "0"),
+    mediaEl,
+    videoUrl: mediaEl.dataset.videoUrl || "",
+    renderToken: Number(mediaEl.dataset.renderToken || "0"),
   };
 
   thumbnailQueue.push(job);
@@ -188,11 +189,11 @@ function processThumbnailQueue() {
     getThumbnailForUrl(job.videoUrl)
       .then((thumbnailDataUrl) => {
         if (!isThumbnailJobValid(job)) return;
-        job.imgEl.src = thumbnailDataUrl;
+        job.mediaEl.src = thumbnailDataUrl;
       })
       .catch(() => {
         if (!isThumbnailJobValid(job)) return;
-        renderFallbackThumbnail(job.imgEl);
+        renderFallbackThumbnail(job.mediaEl);
       })
       .finally(() => {
         activeThumbnailJobs = Math.max(0, activeThumbnailJobs - 1);
@@ -202,7 +203,7 @@ function processThumbnailQueue() {
 }
 
 function isThumbnailJobValid(job) {
-  return job.imgEl.isConnected && job.renderToken === state.renderToken;
+  return job.mediaEl.isConnected && job.renderToken === state.renderToken;
 }
 
 function getThumbnailForUrl(url) {
@@ -215,12 +216,6 @@ function getThumbnailForUrl(url) {
   }
 
   return thumbnailCache.get(url);
-}
-
-function generateFakeDuration(seed) {
-  const mins = 18 + ((seed * 7) % 37);
-  const seconds = (seed * 13) % 60;
-  return `${mins}:${String(seconds).padStart(2, "0")} دقيقة`;
 }
 
 function generateVideoThumbnail(url) {
@@ -289,17 +284,17 @@ function generateVideoThumbnail(url) {
   });
 }
 
-function renderFallbackThumbnail(imgEl) {
-  if (!imgEl.isConnected) return;
+function renderFallbackThumbnail(mediaEl) {
+  if (!mediaEl.isConnected) return;
 
   const fallback = document.createElement("div");
-  fallback.className = "fallback-play";
+  fallback.className = "thumbnail-fallback thumbnail-media";
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "thumbnail-fallback";
-  wrapper.appendChild(fallback);
+  const playIcon = document.createElement("div");
+  playIcon.className = "fallback-play";
+  fallback.appendChild(playIcon);
 
-  imgEl.replaceWith(wrapper);
+  mediaEl.replaceWith(fallback);
 }
 
 function openVideoModal(lecture) {
