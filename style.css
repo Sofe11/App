@@ -8,7 +8,7 @@
   --text: #f7f9fc;
   --muted: #9ca7b7;
   --border: rgba(255, 255, 255, 0.11);
-  --sidebar-width: 340px;
+  --sidebar-width: 340px; /* تم التوسيع كما طلبت */
   --radius-lg: 20px;
   --radius-md: 14px;
   --shadow-lg: 0 22px 48px rgba(0, 0, 0, 0.45);
@@ -42,6 +42,7 @@ body {
     #000000;
   letter-spacing: 0.1px;
   text-shadow: var(--text-shadow-soft);
+  overflow-x: hidden; /* ضروري جداً لكي لا يظهر شريط تمرير سفلي عند إزاحة القائمة */
 }
 
 .hidden {
@@ -51,7 +52,7 @@ body {
 .layout {
   min-height: 100vh;
   padding-right: var(--sidebar-width);
-  transition: padding-right 0.35s ease;
+  transition: padding-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .layout.sidebar-collapsed {
@@ -64,26 +65,34 @@ body {
   right: 0;
   width: var(--sidebar-width);
   height: 100vh;
+  z-index: 100;
+  transform: translateX(0);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   background:
     linear-gradient(to bottom, rgba(30, 144, 255, 0.15), rgba(0, 0, 0, 0.4)),
     rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  padding: 30px 16px 22px;
-  overflow-y: auto;
-  z-index: 30;
-  transform: translateX(0);
-  transition: transform 0.35s ease;
+  /* تم إزالة overflow-y من هنا لمنع اختفاء الزر الخارجي */
 }
 
 .sidebar.is-collapsed {
   transform: translateX(100%);
 }
 
-.sidebar__header {
-  text-align: center;
-  padding: 4px 6px;
+.sidebar__scroll-area {
+  height: 100%;
+  overflow-y: auto;
+  padding: 30px 16px 22px;
+}
+
+.sidebar__scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar__scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 
 .sidebar-toggle {
@@ -104,6 +113,7 @@ body {
   box-shadow: var(--glass-shadow);
   cursor: pointer;
   transition: background 0.3s ease, box-shadow 0.3s ease;
+  z-index: 101;
 }
 
 .sidebar-toggle:hover {
@@ -112,8 +122,8 @@ body {
 }
 
 .sidebar-toggle svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   transition: transform 0.35s ease;
 }
 
@@ -128,6 +138,11 @@ body {
   object-fit: cover;
   border: 3px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 0 36px rgba(30, 144, 255, 0.26), 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar__header {
+  text-align: center;
+  padding: 4px 6px;
 }
 
 .sidebar__header h1 {
@@ -270,9 +285,7 @@ body {
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .lectures-grid {
@@ -283,14 +296,8 @@ body {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .lecture-card {
@@ -303,8 +310,6 @@ body {
   flex-direction: column;
   backdrop-filter: blur(20px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  content-visibility: auto;
-  contain-intrinsic-size: 300px;
 }
 
 .lecture-card:hover {
@@ -336,10 +341,25 @@ body {
   background: #0b0b0b;
 }
 
+/* شكل الغلاف الذكي (البديل للصور المفقودة) */
 .thumbnail-fallback {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   background: linear-gradient(135deg, #1b2636 0%, #0f1013 55%, rgba(30, 144, 255, 0.5) 100%);
+  padding: 10px;
+  text-align: center;
+}
+
+.fallback-chapter-name {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  z-index: 2;
+  padding: 0 10px;
 }
 
 .duration-badge {
@@ -360,13 +380,14 @@ body {
 }
 
 .fallback-play {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.45);
   position: relative;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  z-index: 2;
 }
 
 .fallback-play::before {
@@ -375,9 +396,9 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-35%, -50%);
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-left: 14px solid #fff;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 12px solid #fff;
 }
 
 .lecture-body {
@@ -491,17 +512,16 @@ body {
 
 @media (max-width: 900px) {
   .layout {
-    padding-right: 0;
+    padding-right: 0 !important; /* إلغاء التوسعة على الموبايل دائماً */
   }
 
   .sidebar {
     box-shadow: -12px 0 30px rgba(0, 0, 0, 0.45);
   }
 
+  /* الزر على الموبايل */
   .sidebar-toggle {
-    left: -30px;
-    width: 30px;
-    height: 68px;
+    left: -32px;
   }
 
   .content {
