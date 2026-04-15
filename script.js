@@ -1,5 +1,5 @@
 let player; 
-let currentVideoUrl = ""; // متغير ذكي لحفظ رابط الفيديو الحالي
+let currentVideoUrl = ""; 
 
 const state = {
   data: null,
@@ -30,6 +30,11 @@ const modalEl = document.getElementById("videoModal");
 const modalTitleEl = document.getElementById("modalTitle");
 const closeModalEl = document.getElementById("closeModal");
 
+// عناصر الإشعار
+const continueBanner = document.getElementById("continueWatchingBanner");
+const continueText = document.getElementById("continueText");
+const closeBannerBtn = document.getElementById("closeBannerBtn");
+
 async function init() {
   try {
     showLoading();
@@ -41,6 +46,7 @@ async function init() {
     renderSidebar();
     renderLectures();
     hideLoading();
+    checkContinueWatching(); // فحص المواصلة عند التحميل
   } catch (e) { console.error(e); showError(); }
 }
 
@@ -142,7 +148,7 @@ function getMimeType(url) {
 
 function openVideoModal(lecture) {
   modalTitleEl.textContent = lecture.title || "مشاهدة المحاضرة";
-  currentVideoUrl = lecture.url; // نحفظ الرابط الحالي
+  currentVideoUrl = lecture.url; 
   
   player.source = {
     type: 'video',
@@ -151,16 +157,13 @@ function openVideoModal(lecture) {
   };
   
   modalEl.classList.remove("hidden");
-  
   document.documentElement.style.overflow = "hidden";
   document.body.style.overflow = "hidden";
   document.body.style.touchAction = "none"; 
   
-  // استدعاء الوقت المحفوظ من الذاكرة إذا كان موجود
   const savedTime = localStorage.getItem('vid_progress_' + currentVideoUrl);
   
   setTimeout(() => {
-    // إذا اكو وقت محفوظ، قدم الفيديو اله
     if (savedTime && parseFloat(savedTime) > 0) {
       player.currentTime = parseFloat(savedTime);
     }
@@ -171,7 +174,6 @@ function openVideoModal(lecture) {
 function closeVideoModal() {
   player.stop();
   modalEl.classList.add("hidden");
-  
   document.documentElement.style.overflow = "";
   document.body.style.overflow = "";
   document.body.style.touchAction = ""; 
@@ -207,8 +209,26 @@ classListEl.addEventListener("click", (e) => {
 lecturesGridEl.addEventListener("click", (e) => {
   const btn = e.target.closest(".watch-btn");
   if (!btn || !state.data) return;
-  const lecture = state.data.classes[state.activeClassIndex]?.lectures?.[Number(btn.dataset.lectureIndex)];
-  if (lecture) openVideoModal(lecture);
+  const selected = state.data.classes[state.activeClassIndex];
+  const lecture = selected.lectures?.[Number(btn.dataset.lectureIndex)];
+  
+  if (lecture) {
+    // حفظ معلومات المحاضرة لغرض الإشعار المستقبلي
+    const historyData = {
+      lecture: lecture,
+      chapterName: selected.name,
+      classIndex: state.activeClassIndex
+    };
+    localStorage.setItem('hashemi_last_watched', JSON.stringify(historyData));
+    
+    // إخفاء الإشعار إذا كان ظاهر
+    if(continueBanner) {
+      continueBanner.classList.remove('show');
+      setTimeout(() => continueBanner.classList.add('hidden'), 400);
+    }
+    
+    openVideoModal(lecture);
+  }
 });
 
 layoutEl.addEventListener("click", (e) => { if (isMobileViewport() && !sidebarEl.classList.contains("is-collapsed") && !e.target.closest('.sidebar')) setSidebarCollapsed(true); });
@@ -220,6 +240,40 @@ const mobileMediaQuery = window.matchMedia("(max-width: 900px)");
 setSidebarCollapsed(isMobileViewport());
 mobileMediaQuery.addEventListener("change", () => setSidebarCollapsed(isMobileViewport()));
 
+// دالة فحص المواصلة
+function checkContinueWatching() {
+  if(!continueBanner) return;
+  const savedDataStr = localStorage.getItem('hashemi_last_watched');
+  if (savedDataStr) {
+    const data = JSON.parse(savedDataStr);
+    const savedTime = localStorage.getItem('vid_progress_' + data.lecture.url);
+    
+    if (savedTime && parseFloat(savedTime) > 3) {
+      continueText.textContent = `${data.chapterName} - ${data.lecture.title}`;
+      continueBanner.classList.remove("hidden");
+      setTimeout(() => continueBanner.classList.add("show"), 500); // تأخير بسيط لجمالية الدخول
+      
+      // حدث النقر على الإشعار
+      continueBanner.onclick = (e) => {
+        if(e.target.closest('#closeBannerBtn')) {
+          continueBanner.classList.remove('show');
+          setTimeout(() => continueBanner.classList.add('hidden'), 400);
+          return;
+        }
+        
+        // الانتقال للفصل الصحيح وفتح الفيديو
+        state.activeClassIndex = data.classIndex;
+        renderSidebar();
+        renderLectures();
+        openVideoModal(data.lecture);
+        
+        continueBanner.classList.remove('show');
+        setTimeout(() => continueBanner.classList.add('hidden'), 400);
+      };
+    }
+  }
+}
+
 init();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -229,18 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
     speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
   });
 
-  // حفظ تقدم المشاهدة تلقائياً كلما مشى الفيديو
   player.on('timeupdate', () => {
-    // يحفظ بس إذا عبرت أول 3 ثواني
     if (currentVideoUrl && player.currentTime > 3) {
       localStorage.setItem('vid_progress_' + currentVideoUrl, player.currentTime);
     }
   });
 
-  // مسح الوقت المحفوظ إذا خلصت المحاضرة للاخير حتى تبدي من الصفر بالمرة الجاية
   player.on('ended', () => {
     if (currentVideoUrl) {
       localStorage.removeItem('vid_progress_' + currentVideoUrl);
+      localStorage.removeItem('hashemi_last_watched'); // مسح الإشعار إذا كملت المحاضرة
     }
   });
 
