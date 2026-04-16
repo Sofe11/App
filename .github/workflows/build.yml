@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (Astro Version)
 
 on:
   workflow_dispatch:
@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Add Android Platform
-        run: npx cap add android
+      - name: Build Astro Project
+        run: npm run build
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -39,6 +39,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Al-Hashemi-App
+          name: Al-Hashemi-Astro-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
